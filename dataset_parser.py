@@ -1,5 +1,6 @@
 import os
 import struct
+import threadpool
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -11,6 +12,7 @@ class DataSet(object):
         self._label_filename = label_filename
         self._output_image_path = output_image_path
         self._output_label_path = output_label_path
+        self._gen = self.image_producer()
 
     def image_producer(self):
         f = open(self._train_filename, 'rb')
@@ -28,23 +30,30 @@ class DataSet(object):
             image_value = struct.unpack_from(image_big_endian,
                                              f.read(image_size))
             image_value = list(image_value)
-            yield image_value
+            yield (image_value, i + 1)
         f.close()
 
-    def get_image(self):
-        i = 1
-        for image in self.image_producer():
-            img = np.array(image)
-            img = img.reshape(28, 28)
-            output_file = os.path.join(self._output_image_path, 'image_%d.png' % i)
-            plt.figure(frameon=False)
-            plt.imshow(img, cmap='binary')  # show the image in BW mode
-            plt.axis('off')
-            plt.savefig(output_file, bbox_inches='tight', pad_inches=0)
-            plt.close()
-            i += 1
+    def image_consumer(self):
+        (image, i) = next(self._gen)
+        print('parsing %d' % i)
+        img = np.array(image)
+        img = img.reshape(28, 28)
+        output_file = os.path.join(self._output_image_path, 'image_%d.png' % i)
+        plt.figure(frameon=False)
+        plt.imshow(img, cmap='binary')  # show the image in BW mode
+        plt.axis('off')
+        plt.savefig(output_file, bbox_inches='tight', pad_inches=0)
+        plt.close()
 
-    def get_label(self):
+    def get_images(self):
+        pool = threadpool.ThreadPool(10)
+        requests = []
+        for i in range(60000):
+            requests.append(threadpool.makeRequests(self.image_consumer(), []))
+        map(pool.putRequest, requests)
+        pool.poll()
+
+    def get_labels(self):
         f_in = open(self._label_filename, 'rb')
         f_out = open(os.path.join(self._output_label_path, 'label.txt'), 'w')
         # label header
@@ -67,4 +76,5 @@ class DataSet(object):
 
 
 dataset = DataSet('images', 'labels')
-dataset.get_label()
+dataset.get_images()
+dataset.get_labels()

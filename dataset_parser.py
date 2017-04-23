@@ -26,11 +26,11 @@ class DataSet(object):
         image = '784B'  # 28 * 28
         image_big_endian = '>' + image
         image_size = struct.calcsize(image)
-        for i in range(num_images):
+        for i in range(1, num_images + 1):
             image_value = struct.unpack_from(image_big_endian,
                                              f.read(image_size))
             image_value = list(image_value)
-            yield (image_value, i + 1)
+            yield (image_value, i)
         f.close()
 
     def image_consumer(self):
@@ -46,6 +46,12 @@ class DataSet(object):
         plt.close()
 
     def get_images(self):
+        images = []
+        for (value, i) in self.image_producer():
+            images.append(value)
+        return np.array(images)
+
+    def get_image_files(self):
         pool = threadpool.ThreadPool(10)
         requests = []
         for i in range(60000):
@@ -53,28 +59,34 @@ class DataSet(object):
         map(pool.putRequest, requests)
         pool.poll()
 
-    def get_labels(self):
-        f_in = open(self._label_filename, 'rb')
-        f_out = open(os.path.join(self._output_label_path, 'label.txt'), 'w')
+    def label_producer(self):
+        f = open(self._label_filename, 'rb')
+
         # label header
         header = 'I' * 2
         header_big_endian = '>' + header
         header_size = struct.calcsize(header)
         num_magic, num_items = struct.unpack_from(header_big_endian,
-                                                  f_in.read(header_size))
+                                                  f.read(header_size))
         # label
         label = 'B'
         label_big_endian = '>' + label
         label_size = struct.calcsize(label)
         for i in range(1, num_items + 1):
             label_value = struct.unpack_from(label_big_endian,
-                                             f_in.read(label_size))
+                                             f.read(label_size))
             label_value = label_value[0]
-            f_out.write('%d: %d\n' % (i, label_value))
-        f_in.close()
+            yield (label_value, i)
+        f.close()
+
+    def get_labels(self):
+        labels = []
+        for (value, i) in self.label_producer():
+            labels.append(value)
+        return np.array(labels)
+
+    def get_label_file(self):
+        f_out = open(os.path.join(self._output_label_path, 'label.txt'), 'w')
+        for (value, i) in self.label_producer():
+            f_out.write('%d: %d\n' % (i, value))
         f_out.close()
-
-
-dataset = DataSet('images', 'labels')
-dataset.get_images()
-dataset.get_labels()

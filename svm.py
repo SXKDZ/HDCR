@@ -6,37 +6,32 @@ from sklearn.model_selection import GridSearchCV
 from dataset_parser import DataSet
 
 
+def load_or_train(filename, model, train_X, train_y, compress=3):
+    if os.path.exists(filename):
+        model = joblib.load(filename)
+        print('load job from disk ' + filename + '...')
+    else:
+        print('starting new job...')
+        model.fit(train_X, train_y)
+        print('job done...')
+        joblib.dump(model, filename, compress=compress)
+        print('job persistence finished...')
+    return model
+
+
 def test_linear_svm(train_X, train_y):
     classifier = LinearSVC()
-    if os.path.exists('SVM.model'):
-        classifier = joblib.load('SVM.model')
-        print('load model from disk SVM.model...')
-    else:
-        print('training model...')
-        classifier.fit(train_X, train_y)
-        print('training of %d samples done...' % len(train_X))
-        joblib.dump(classifier, 'SVM.model', compress=3)
-        print('model persistence finished...')
-    return classifier
+    return load_or_train('SVM.pkl', classifier, train_X, train_y)
 
 
 def test_svm_cross_validation(train_X, train_y):
     classifier = SVC(kernel='rbf', probability=True)
     param_grid = {'C': [1e-3, 1e-2, 1e-1, 1, 5, 10, 100, 1000], 'gamma': [0.001, 0.005, 0.0001]}
-    grid_search = GridSearchCV(classifier, param_grid, n_jobs=1, verbose=2)
-    grid_search.fit(train_X, train_y)
+    grid_search = GridSearchCV(classifier, param_grid, n_jobs=4, verbose=3)
+    grid_search = load_or_train('grid_best_parameter.pkl', grid_search, train_X, train_y, compress=1)
     best_parameters = grid_search.best_estimator_.get_params()
     classifier = SVC(kernel='rbf', C=best_parameters['C'], gamma=best_parameters['gamma'], probability=True)
-    if os.path.exists('SVM_CV.model'):
-        classifier = joblib.load('SVM_CV.model')
-        print('load model from disk SVM_CV.model...')
-    else:
-        print('training model...')
-        classifier.fit(train_X, train_y)
-        print('training of %d samples done...' % len(train_X))
-        joblib.dump(classifier, 'SVM_CV.model', compress=3)
-        print('model persistence finished...')
-    return classifier
+    return load_or_train('SVM_CV.pkl', classifier, train_X, train_y)
 
 
 def test(model, test_X, test_y):

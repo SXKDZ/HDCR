@@ -1,13 +1,13 @@
 import os
-from sklearn.svm import SVC
+from sklearn.svm import SVC, LinearSVC
 from sklearn.externals import joblib
 from sklearn.model_selection import GridSearchCV
 
 from dataset_parser import DataSet
 
 
-def test_svm(train_X, train_y):
-    classifier = SVC()
+def test_linear_svm(train_X, train_y):
+    classifier = LinearSVC()
     if os.path.exists('SVM.model'):
         classifier = joblib.load('SVM.model')
         print('load model from disk SVM.model...')
@@ -15,7 +15,7 @@ def test_svm(train_X, train_y):
         print('training model...')
         classifier.fit(train_X, train_y)
         print('training of %d samples done...' % len(train_X))
-        joblib.dump(classifier, 'SVM.model')
+        joblib.dump(classifier, 'SVM.model', compress=3)
         print('model persistence finished...')
     return classifier
 
@@ -34,7 +34,7 @@ def test_svm_cross_validation(train_X, train_y):
         print('training model...')
         classifier.fit(train_X, train_y)
         print('training of %d samples done...' % len(train_X))
-        joblib.dump(classifier, 'SVM_CV.model')
+        joblib.dump(classifier, 'SVM_CV.model', compress=3)
         print('model persistence finished...')
     return classifier
 
@@ -45,7 +45,7 @@ def test(model, test_X, test_y):
     print('prediction of %d samples done...' % len(predict))
     count = 0
     for i in range(len(test_X)):
-        print('%d %d' % (predict[i], test_y[i]))
+        # print('%d %d' % (predict[i], test_y[i]))
         if predict[i] == test_y[i]:
             count += 1
     print(count / len(test_y))
@@ -54,18 +54,18 @@ def test(model, test_X, test_y):
 if __name__ == '__main__':
     training_set = DataSet('train_images', 'train_labels')
     print('loading training set data...')
-    train_X = training_set.get_images()
+    train_X = training_set.get_hog_images()
     train_y = training_set.get_labels()
     print('loading training set data done...')
 
     testing_set = DataSet('test_images', 'test_labels')
     print('loading test set data...')
-    test_X = testing_set.get_images()
+    test_X = testing_set.get_hog_images()
     test_y = testing_set.get_labels()
     print('loading test set data done...')
 
     print('model: SVM classifier')
-    model_svm = test_svm(train_X, train_y)
+    model_svm = test_linear_svm(train_X, train_y)
     test(model_svm, test_X, test_y)
 
     print('model: SVM classifier using cross validation')

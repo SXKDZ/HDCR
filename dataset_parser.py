@@ -3,6 +3,7 @@ import struct
 import threadpool
 import numpy as np
 import matplotlib.pyplot as plt
+from skimage.feature import hog
 
 
 class DataSet(object):
@@ -47,9 +48,18 @@ class DataSet(object):
 
     def get_images(self):
         images = []
-        for (value, i) in self.image_producer():
-            images.append(value)
+        for (feature, i) in self.image_producer():
+            images.append(feature)
         return np.array(images)
+
+    def get_hog_images(self):
+        list_hog_fd = []
+        original_features = self.get_images()
+        for feature in original_features:
+            fd = hog(feature.reshape((28, 28)), orientations=9, pixels_per_cell=(14, 14), cells_per_block=(1, 1),
+                     visualise=False)
+            list_hog_fd.append(fd)
+        return np.array(list_hog_fd, 'float64')
 
     def get_image_files(self):
         pool = threadpool.ThreadPool(10)

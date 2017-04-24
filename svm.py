@@ -30,6 +30,7 @@ def test_svm_cross_validation(train_X, train_y):
     grid_search = GridSearchCV(classifier, param_grid, n_jobs=4, verbose=3)
     grid_search = load_or_train('grid_best_parameter.pkl', grid_search, train_X, train_y, compress=1)
     best_parameters = grid_search.best_estimator_.get_params()
+    # print(best_parameters)
     classifier = SVC(kernel='rbf', C=best_parameters['C'], gamma=best_parameters['gamma'], probability=True)
     return load_or_train('SVM_CV.pkl', classifier, train_X, train_y)
 
@@ -40,7 +41,7 @@ def test(model, test_X, test_y):
     print('prediction of %d samples done...' % len(predict))
     count = 0
     for i in range(len(test_X)):
-        print('%d %d' % (predict[i], test_y[i]))
+        # print('%d %d' % (predict[i], test_y[i]))
         if predict[i] == test_y[i]:
             count += 1
     print(count / len(test_y))

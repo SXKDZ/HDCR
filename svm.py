@@ -22,8 +22,8 @@ def test_linear_svm(train_X, train_y):
 
 def test_svm_cross_validation(train_X, train_y):
     classifier = SVC(kernel='rbf', probability=True)
-    param_grid = {'C': [1e-3, 1e-2, 1e-1, 1, 10, 100, 1000], 'gamma': [0.001, 0.0001]}
-    grid_search = GridSearchCV(classifier, param_grid, n_jobs=1, verbose=1)
+    param_grid = {'C': [1e-3, 1e-2, 1e-1, 1, 5, 10, 100, 1000], 'gamma': [0.001, 0.005, 0.0001]}
+    grid_search = GridSearchCV(classifier, param_grid, n_jobs=1, verbose=2)
     grid_search.fit(train_X, train_y)
     best_parameters = grid_search.best_estimator_.get_params()
     classifier = SVC(kernel='rbf', C=best_parameters['C'], gamma=best_parameters['gamma'], probability=True)
@@ -45,7 +45,7 @@ def test(model, test_X, test_y):
     print('prediction of %d samples done...' % len(predict))
     count = 0
     for i in range(len(test_X)):
-        # print('%d %d' % (predict[i], test_y[i]))
+        print('%d %d' % (predict[i], test_y[i]))
         if predict[i] == test_y[i]:
             count += 1
     print(count / len(test_y))

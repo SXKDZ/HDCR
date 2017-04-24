@@ -20,5 +20,5 @@ Firstly download the dataset from [this link](http://yann.lecun.com/exdb/mnist/)
 ## Training and Test
 
 - `test_linear_svm(features, labels)` and `test_svm_cross_validation(features, labels)` use the linear SVM classifier (support vector machine) and the SVM classifier using `rbf` kernel function with parameter tuning by cross validation.
-- `test(models, features, labels)` use one trained model to verify the model and get the correctness ratio.
+- `test(models, features, labels)` uses one trained model to verify the model and get the correctness ratio.
 
